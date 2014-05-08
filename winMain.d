@@ -8,11 +8,20 @@
 import core.runtime;
 import std.exception;
 import std.string;
-import std.utf : count, toUTFz;
+import std.utf;
 
-auto toUTF16z(S)(S s)
-{
-    return toUTFz!(const(wchar)*)(s);
+version(Unicode) {
+    const(TCHAR)* _T( wstring str ) { return (str ~ "\0").ptr; }
+
+     string TtoC( immutable(TCHAR)* tc ) { return TtoW(tc).toUTF8(); }
+    wstring TtoW( immutable(TCHAR)* tc ) { return tc[0..lstrlen(cast(TCHAR*)tc)]; }
+}
+else {
+    import std.windows.charset;
+    const(TCHAR)* _T( string str ) { return str.toMBSz(); }
+
+     string TtoC( immutable(TCHAR)* tc ) { return fromMBSz(tc); }
+    wstring TtoW( immutable(TCHAR)* tc ) { return fromMBSz(tc).toUTF16(); }
 }
 
 pragma(lib, "ole32.lib");
@@ -65,11 +74,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int i
     }
     catch (Throwable o)
     {
-        version (Unicode)
-          MessageBox(null, o.toString().toUTF16z, "Error".toUTF16z, MB_OK | MB_ICONEXCLAMATION);
-        else
-          MessageBox(null, o.toString().toStringz, "Error".toStringz, MB_OK | MB_ICONEXCLAMATION);
-        
+        MessageBox(null, _T(o.toString()), _T("Error"), MB_OK | MB_ICONEXCLAMATION);
         result = 0;
     }
     return result;
@@ -94,56 +99,29 @@ int xWinMain(HINSTANCE xhInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
         hIcon         = LoadIcon(NULL, IDI_APPLICATION);
         hCursor       = LoadCursor(NULL, IDC_ARROW);
         hbrBackground = cast(HBRUSH) GetStockObject(WHITE_BRUSH);
-        version (Unicode) {
-            lpszMenuName  = appName.toUTF16z;
-            lpszClassName = appName.toUTF16z;
-        } else {
-            lpszMenuName  = appName.toStringz;
-            lpszClassName = appName.toStringz;
-        }
+        lpszMenuName  = null;
+        lpszClassName = _T(appName);
+        hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
     }
     
     if (RegisterClassEx(&wndclassEx) == 0)
     {
-        version (Unicode) {
-            MessageBox(NULL, "This program requires Windows NT!", appName.toUTF16z, MB_ICONERROR);
-        }
-        else {
-            MessageBox(NULL, "This program requires Windows NT!", appName.toStringz, MB_ICONERROR);
-        }
-        
+        MessageBox(NULL, _T("RegistarClassEx Error!"), _T(appName), MB_ICONERROR);
         return 0;
     }
-    version (Unicode) {
-        hwndMain = CreateWindowEx(
-             0,							// WS_EX_COMPOSITED
-            appName.toUTF16z,          // window class name
-            description.toUTF16z,          // window caption
-            WS_EX_OVERLAPPEDWINDOW,           // window style
-            CW_USEDEFAULT,                 // initial x position
-            CW_USEDEFAULT,                 // initial y position
-            Window_ClientWidth,                 // initial x size
-            Window_ClientHeight,                 // initial y size
-            NULL,                          // parent window handle
-            NULL,                          // window menu handle
-            xhInstance,                     // program instance handle
-            NULL);                         // creation parameters
-    }
-    else {
-        hwndMain = CreateWindowEx(
-            0, // WS_EX_OVERLAPPEDWINDOW,			// window style,
-            appName.toStringz,        // window class name
-            description.toStringz,         // window caption
-            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, // window style
-            CW_USEDEFAULT,                 // initial x position
-            CW_USEDEFAULT,                 // initial y position
-            Window_ClientWidth,                 // initial x size
-            Window_ClientHeight,                 // initial y size
-            NULL,                          // parent window handle
-            NULL,                          // window menu handle
-            xhInstance,                     // program instance handle
-            NULL);                         // creation parameters
-    }
+    hwndMain = CreateWindowEx(
+        WS_EX_OVERLAPPEDWINDOW,     //  WS_EX_COMPOSITED
+        _T(appName),                    // window class name
+        _T(description),                // window caption
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,            // window style
+        CW_USEDEFAULT,                  // initial x position
+        CW_USEDEFAULT,                  // initial y position
+        Window_ClientWidth,             // initial x size
+        Window_ClientHeight,            // initial y size
+        null,                           // parent window handle
+        null,                           // window menu handle
+        xhInstance,                     // program instance handle
+        null);                          // creation parameters
     
     ShowWindow(hwndMain, iCmdShow);
     UpdateWindow(hwndMain);
@@ -230,7 +208,7 @@ LRESULT OnPaint(HWND hwnd, WPARAM wParam)
     
     hDC = BeginPaint(hwnd, &ps);
     // TextOut(hDC, 5, 25, text.toStringz, text.length);
-    DrawText(hDC, text.toStringz, -1, &rt, DT_WORDBREAK);
+    DrawText(hDC, _T(text), -1, &rt, DT_WORDBREAK);
     EndPaint (hwnd, &ps);
     return 0;
 }

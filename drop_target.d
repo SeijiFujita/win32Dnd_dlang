@@ -106,7 +106,7 @@ public:
         return DragOver(grfKeyState, pt, pdwEffect);
     }
 
-//ドロップ状態でマウスのポインタが変更すると呼ばれる POINTL に注意
+//ドロップ状態でマウスのポインタが移動すると呼ばれる POINTL に注意
     extern (Windows)
     HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
     {

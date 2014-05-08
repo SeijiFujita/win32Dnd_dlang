@@ -19,7 +19,7 @@ CLIBS     = -L/usr/local/lib -lm
 ####
 ## http://dlang.org/dmd-windows.html
 DMD     = dmd
-DFLAGS = -g
+DFLAGS = -g -wi
 #DFLAGS  = -O -release -inline -noboundscheck
 DLDFLAGS = -L/SUBSYSTEM:WINDOWS:5.01
 DMDLIBS  = lib/dmd_win32.lib

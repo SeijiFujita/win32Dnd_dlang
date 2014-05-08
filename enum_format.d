@@ -31,20 +31,20 @@ public:
     //
     this(FORMATETC[] fmt)
     {
-        outLog("ClassEnumFormatEtc:this");
+        outLog("EnumFormatEtc:this");
         _index = 0;
         foreach (v ; fmt)
             _formatEtc ~= deepDupFormatEtc(v);
     }
     ~this()
     {
-        outLog("ClassEnumFormatEtc:~this");
+        outLog("EnumFormatEtc:~this");
     }
     //
     extern (Windows)
     override HRESULT QueryInterface(GUID* riid, void** ppv)
     {
-        outLog("ClassEnumFormatEtc:QueryInterface");
+        outLog("EnumFormatEtc:QueryInterface");
         if (*riid == IID_IEnumFORMATETC)
         {
             *ppv = cast(void*)cast(IUnknown)this;
@@ -53,20 +53,6 @@ public:
         }
         return super.QueryInterface(riid, ppv);
     }
-    //
-    extern (Windows)
-    override ULONG Release()
-    {
-        outLog("ClassEnumFormatEtc:Release");
-        LONG lRef = atomicOp!"-="(_refCount, 1);
-        if (lRef == 0)
-        {
-            this.releaseMemory();
-            GC.removeRoot(cast(void*)this);
-        }
-        return cast(ULONG)lRef;
-    }
-
     /**
         MSDN: If the returned FORMATETC structure contains a non-null
         ptd member, then the caller must free this using CoTaskMemFree.
